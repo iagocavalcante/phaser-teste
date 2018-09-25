@@ -1,7 +1,8 @@
 var game = new Phaser.Game(800,600,Phaser.AUTO,'',{
-	preload: preload,
-	create: create,
-	update: update
+  preload: preload,
+  create: create,
+  update: update,
+  render: render
 });
 
 var plataformas;
@@ -10,6 +11,8 @@ var tecla;
 var estrelas;
 var pontuacao = 0 ;
 var pontuacaoTexto;
+var arma;
+var atirar;
 
 function preload(){
  game.load.image('ceu','sprites/sky.png');
@@ -24,6 +27,10 @@ function create(){
  game.physics.startSystem(Phaser.Physics.ARCADE);
 
  game.add.sprite(0,0,'ceu');
+
+ arma = game.add.weapon(7, 'estrela');
+ arma.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
+ arma.fireAngle = 180;
 
  pontuacaoTexto = game.add.text(10,10,'Pontos: 0',{'fontSize':'24px', 'fill':'#fff'});
 
@@ -58,11 +65,15 @@ function create(){
    estrelas.enableBody = true;
 
    for (var i = 0; i < 25; i++) {
-   	var estrela =  estrelas.create(i * 50,0,'estrela');
+    var estrela =  estrelas.create(i * 50,0,'estrela');
 
-	  estrela.body.gravity.y = 12;
-	  estrela.body.bounce.y = 0.3 + Math.random() * 0.2;
+    estrela.body.gravity.y = 12;
+    estrela.body.bounce.y = 0.3 + Math.random() * 0.2;
    }
+
+   arma.trackSprite(personagem, 10, 30);
+
+   atirar = game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
 }
 
 function update(){
@@ -74,21 +85,28 @@ function update(){
  game.physics.arcade.overlap(personagem, estrelas, coleta, null,this);
 
   personagem.body.velocity.x = 0;
-
+  arma.bulletSpeed = 900;
   if(tecla.right.isDown){
-  	personagem.body.velocity.x = 300;
-  	personagem.animations.play('direita');
+    personagem.body.velocity.x = 300;
+    personagem.animations.play('direita');
+    arma.bulletSpeed = -900;
 
   }else if(tecla.left.isDown){
-  	personagem.body.velocity.x = -300;
-  	personagem.animations.play('esquerda');
+    personagem.body.velocity.x = -300;
+    personagem.animations.play('esquerda');
+    arma.bulletSpeed = 900;
+    
   }else{
-  	personagem.animations.stop();
-  	personagem.frame = 4;
+    personagem.animations.stop();
+    personagem.frame = 4;
   }
 
   if(tecla.up.isDown && noChao && personagem.body.touching.down){
-  	personagem.body.velocity.y = -400;
+    personagem.body.velocity.y = -400;
+  }
+
+  if(atirar.isDown){
+    arma.fire();
   }
 
 }
@@ -96,8 +114,13 @@ function update(){
 
 function coleta(personagem, estrela){
 
-	estrela.kill();
-	pontuacao += 10;
-	pontuacaoTexto.text = "Pontos: " + pontuacao;
+  estrela.kill();
+  pontuacao += 10;
+  pontuacaoTexto.text = "Pontos: " + pontuacao;
 
 }
+
+function render(){
+  
+}
+
